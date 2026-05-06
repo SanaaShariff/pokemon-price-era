@@ -188,17 +188,16 @@ def main():
 
         for p in sealed:
             pid = p.get("productId")
-            product_type = (
-                p.get("productTypeName")
-                or p.get("productType")
-                or str(p.get("productTypeId", ""))
+            name = p.get("name", "")
+            product_type = next(
+                (kw for kw in SEALED_KEYWORDS if kw in name), ""
             )
 
             conn.execute(
                 "INSERT OR REPLACE INTO products "
                 "(product_id, group_id, name, product_type, image_url, url) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (pid, gid, p.get("name", ""), product_type,
+                (pid, gid, name, product_type,
                  p.get("imageUrl", ""), p.get("url", "")),
             )
             n_products += 1
