@@ -49,9 +49,10 @@
       margin: 0 auto;
       padding: 18px 32px;
       display: flex;
-      align-items: baseline;
-      gap: 12px;
+      align-items: center;
+      gap: 4px;
     }
+    .header-icon { display: block; flex-shrink: 0; }
     .logo {
       font-size: 20px;
       font-weight: 700;
@@ -348,6 +349,66 @@
 
 <header>
   <div class="header-inner">
+    <svg class="header-icon" width="40" height="36" viewBox="0 0 178 160" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hbodygrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#d0cfe8"/>
+          <stop offset="100%" style="stop-color:#b0aed4"/>
+        </linearGradient>
+        <linearGradient id="hbodygrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#cfd0e8"/>
+          <stop offset="100%" style="stop-color:#aeafd4"/>
+        </linearGradient>
+      </defs>
+      <!-- LEFT MOUSE -->
+      <ellipse cx="58" cy="48" rx="13" ry="15" fill="#c4c2de" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="58" cy="48" rx="8" ry="10" fill="#e8b4c8"/>
+      <ellipse cx="86" cy="48" rx="13" ry="15" fill="#c4c2de" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="86" cy="48" rx="8" ry="10" fill="#e8b4c8"/>
+      <ellipse cx="72" cy="114" rx="28" ry="22" fill="url(#hbodygrad)" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="72" cy="74" rx="26" ry="24" fill="url(#hbodygrad)" stroke="#9e9cbf" stroke-width="0.5"/>
+      <circle cx="64" cy="70" r="4" fill="#2d2b4e"/>
+      <circle cx="80" cy="70" r="4" fill="#2d2b4e"/>
+      <circle cx="65.5" cy="68.5" r="1.2" fill="white"/>
+      <circle cx="81.5" cy="68.5" r="1.2" fill="white"/>
+      <ellipse cx="72" cy="79" rx="3.5" ry="2.5" fill="#e8a0b4"/>
+      <line x1="68" y1="80" x2="48" y2="77" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="68" y1="82" x2="48" y2="84" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="76" y1="80" x2="96" y2="77" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="76" y1="82" x2="96" y2="84" stroke="#9e9cbf" stroke-width="0.7"/>
+      <path d="M100 124 Q118 136 112 150" fill="none" stroke="#b0aed4" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- flower -->
+      <line x1="72" y1="50" x2="72" y2="38" stroke="#5cb85c" stroke-width="1.5"/>
+      <circle cx="72" cy="32" r="4" fill="#ff9eb5"/>
+      <circle cx="66" cy="36" r="4" fill="#ff9eb5"/>
+      <circle cx="78" cy="36" r="4" fill="#ff9eb5"/>
+      <circle cx="64" cy="30" r="4" fill="#ffb3c6"/>
+      <circle cx="80" cy="30" r="4" fill="#ffb3c6"/>
+      <circle cx="72" cy="33" r="4" fill="#ffdd57"/>
+      <!-- RIGHT MOUSE -->
+      <ellipse cx="128" cy="48" rx="13" ry="15" fill="#c4c2de" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="128" cy="48" rx="8" ry="10" fill="#e8b4c8"/>
+      <ellipse cx="156" cy="48" rx="13" ry="15" fill="#c4c2de" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="156" cy="48" rx="8" ry="10" fill="#e8b4c8"/>
+      <ellipse cx="142" cy="114" rx="28" ry="22" fill="url(#hbodygrad2)" stroke="#9e9cbf" stroke-width="0.5"/>
+      <ellipse cx="142" cy="74" rx="26" ry="24" fill="url(#hbodygrad2)" stroke="#9e9cbf" stroke-width="0.5"/>
+      <circle cx="134" cy="70" r="4" fill="#2d2b4e"/>
+      <circle cx="150" cy="70" r="4" fill="#2d2b4e"/>
+      <circle cx="135.5" cy="68.5" r="1.2" fill="white"/>
+      <circle cx="151.5" cy="68.5" r="1.2" fill="white"/>
+      <ellipse cx="142" cy="79" rx="3.5" ry="2.5" fill="#e8a0b4"/>
+      <line x1="138" y1="80" x2="118" y2="77" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="138" y1="82" x2="118" y2="84" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="146" y1="80" x2="166" y2="77" stroke="#9e9cbf" stroke-width="0.7"/>
+      <line x1="146" y1="82" x2="166" y2="84" stroke="#9e9cbf" stroke-width="0.7"/>
+      <path d="M170 124 Q188 136 182 150" fill="none" stroke="#aeafd4" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- mushroom -->
+      <rect x="139" y="38" width="6" height="12" rx="2" fill="#e8dcc8" stroke="#c4b49e" stroke-width="0.5"/>
+      <ellipse cx="142" cy="38" rx="14" ry="8" fill="#e05c5c" stroke="#c04040" stroke-width="0.5"/>
+      <circle cx="136" cy="36" r="2.5" fill="white" opacity="0.85"/>
+      <circle cx="145" cy="33" r="2" fill="white" opacity="0.85"/>
+      <circle cx="149" cy="38" r="1.8" fill="white" opacity="0.85"/>
+    </svg>
     <span class="logo">TandemDex</span>
     <span class="logo-sub">Sealed Price Tracker</span>
   </div>
