@@ -151,6 +151,13 @@
       gap: 8px;
       margin-bottom: 12px;
     }
+    .abbrev-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
     .abbrev-pill {
       background: var(--accent-dim);
       color: var(--accent);
@@ -159,8 +166,11 @@
       font-size: 10px;
       font-weight: 800;
       letter-spacing: .04em;
-      flex-shrink: 0;
-      margin-top: 1px;
+    }
+    .card-date {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
     }
     .card-set-name {
       font-size: 12px;
@@ -258,8 +268,8 @@
   <button class="tab" data-era="Mega Evolution">Mega Evolution</button>
 </nav>
 
-<section class="hot-section">
-  <div class="section-label">🔥 Hot This Week</div>
+<section class="hot-section" id="hot-section">
+  <div class="section-label" id="hot-title">🔥 Hot This Week</div>
   <div id="hot-items" class="hot-items">
     <div class="inline-msg">Loading movers...</div>
   </div>
@@ -331,28 +341,47 @@
 
   /* ── Hot banner ── */
   async function loadHot(era) {
-    const el = document.getElementById('hot-items');
-    el.innerHTML = '<div class="inline-msg">Loading movers...</div>';
+    const el      = document.getElementById('hot-items');
+    const section = document.getElementById('hot-section');
+    const title   = document.getElementById('hot-title');
+    el.innerHTML  = '<div class="inline-msg">Loading movers...</div>';
+    section.style.display = '';
+
     try {
-      const data = await apiFetch(`/api/hot?era=${encodeURIComponent(era)}`);
-      if (!data.length) {
-        el.innerHTML = '<div class="inline-msg">Not enough data yet — run snapshot.py again tomorrow.</div>';
+      const { mode, items } = await apiFetch(`/api/hot?era=${encodeURIComponent(era)}`);
+
+      if (mode === 'empty') {
+        section.style.display = 'none';
         return;
       }
-      el.innerHTML = data.map(item => {
-        const chg = item.pct_change;
-        const cls = chg > 0 ? 'up' : chg < 0 ? 'down' : 'flat';
-        const sign = chg > 0 ? '+' : '';
-        return `
+
+      if (mode === 'movers') {
+        title.textContent = '🔥 Hot This Week';
+        el.innerHTML = items.map(item => {
+          const chg  = item.pct_change;
+          const cls  = chg > 0 ? 'up' : chg < 0 ? 'down' : 'flat';
+          const sign = chg > 0 ? '+' : '';
+          return `
+            <div class="hot-item">
+              <div class="hot-info">
+                <div class="hot-product">${item.product_name}</div>
+                <div class="hot-set">${item.abbreviation}</div>
+              </div>
+              <div class="hot-price">$${item.current_price.toFixed(2)}</div>
+              <div class="badge ${cls}">${sign}${chg.toFixed(1)}%</div>
+            </div>`;
+        }).join('');
+      } else {
+        title.textContent = '💎 Most Valuable This Week';
+        el.innerHTML = items.map(item => `
           <div class="hot-item">
             <div class="hot-info">
               <div class="hot-product">${item.product_name}</div>
-              <div class="hot-set">${item.set_name}</div>
+              <div class="hot-set">${item.abbreviation}</div>
             </div>
             <div class="hot-price">$${item.current_price.toFixed(2)}</div>
-            <div class="badge ${cls}">${sign}${chg.toFixed(1)}%</div>
-          </div>`;
-      }).join('');
+          </div>`).join('');
+      }
     } catch (e) {
       el.innerHTML = '<div class="inline-msg">Could not load movers.</div>';
     }
@@ -376,7 +405,10 @@
         <div class="set-card ${selectedSet?.group_id === set.group_id ? 'active' : ''}"
              onclick="selectSet(${set.group_id})">
           <div class="card-header">
-            <span class="abbrev-pill">${set.abbreviation}</span>
+            <div class="abbrev-col">
+              <span class="abbrev-pill">${set.abbreviation}</span>
+              <span class="card-date">${formatDate(set.published_on)}</span>
+            </div>
             <span class="card-set-name">${cleanName(set.name)}</span>
           </div>
           <div class="price-rows">
@@ -600,6 +632,13 @@
 
   function cleanName(name) {
     return name.replace(/^[A-Z0-9]+:\s*/, '');
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [year, month] = dateStr.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[parseInt(month, 10) - 1]} ${year}`;
   }
 
   async function apiFetch(url) {

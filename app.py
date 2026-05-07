@@ -116,7 +116,9 @@ def get_hot(era: Optional[str] = None):
     conn = get_conn()
     try:
         era_filter = "AND s.era = :era" if era else ""
-        rows = conn.execute(f"""
+        params = {"era": era}
+
+        movers = conn.execute(f"""
             WITH ranked AS (
                 SELECT
                     ps.product_id,
@@ -124,6 +126,7 @@ def get_hot(era: Optional[str] = None):
                     p.name         AS product_name,
                     p.product_type,
                     s.name         AS set_name,
+                    s.abbreviation,
                     ROW_NUMBER() OVER (
                         PARTITION BY ps.product_id
                         ORDER BY ps.captured_at DESC
@@ -138,6 +141,7 @@ def get_hot(era: Optional[str] = None):
                 cur.product_id,
                 cur.product_name,
                 cur.set_name,
+                cur.abbreviation,
                 cur.product_type,
                 cur.market_price                                                            AS current_price,
                 prev.market_price                                                           AS previous_price,
@@ -148,10 +152,44 @@ def get_hot(era: Optional[str] = None):
             JOIN ranked prev
               ON prev.product_id = cur.product_id AND prev.rn = 2
             WHERE cur.rn = 1 AND prev.market_price > 0
+              AND cur.market_price > prev.market_price
             ORDER BY pct_change DESC
             LIMIT 5
-        """, {"era": era}).fetchall()
-        return [dict(r) for r in rows]
+        """, params).fetchall()
+
+        if movers:
+            return {"mode": "movers", "items": [dict(r) for r in movers]}
+
+        valuable = conn.execute(f"""
+            SELECT * FROM (
+                SELECT
+                    p.product_id,
+                    p.name         AS product_name,
+                    p.product_type,
+                    s.name         AS set_name,
+                    s.abbreviation,
+                    ps.market_price AS current_price,
+                    NULL            AS previous_price,
+                    NULL            AS pct_change,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY p.product_id
+                        ORDER BY ps.captured_at DESC
+                    ) AS rn
+                FROM price_snapshots ps
+                JOIN products p ON p.product_id = ps.product_id
+                JOIN sets     s ON s.group_id   = p.group_id
+                WHERE ps.market_price IS NOT NULL AND ps.market_price > 0
+                {era_filter}
+            )
+            WHERE rn = 1
+            ORDER BY current_price DESC
+            LIMIT 5
+        """, params).fetchall()
+
+        if not valuable:
+            return {"mode": "empty", "items": []}
+
+        return {"mode": "valuable", "items": [dict(r) for r in valuable]}
     finally:
         conn.close()
 
