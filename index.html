@@ -321,6 +321,7 @@
 
     if (eraCache[era]) {
       renderGrid(eraCache[era]);
+      loadSparklines(eraCache[era]);
       return;
     }
 
@@ -331,6 +332,7 @@
       const data = await apiFetch(`/api/era/${encodeURIComponent(era)}`);
       eraCache[era] = data;
       renderGrid(data);
+      loadSparklines(data);
     } catch (e) {
       document.getElementById('set-grid').innerHTML =
         '<div class="state-msg">Failed to load sets.</div>';
@@ -397,7 +399,6 @@
     grid.innerHTML = sets.map(set => {
       const etb  = byType(set.products, 'Elite Trainer Box');
       const bb   = byType(set.products, 'Booster Box');
-      const spark = etb || bb;
       const etbPrice = etb?.latest?.market_price;
       const bbPrice  = bb?.latest?.market_price;
 
@@ -421,9 +422,25 @@
               <span class="pr-val">${fmtPrice(bbPrice)}</span>
             </div>
           </div>
-          ${sparkline(spark?.history ?? [])}
+          <div id="spark-${set.group_id}">${sparkline([])}</div>
         </div>`;
     }).join('');
+  }
+
+  /* ── Sparkline async loader ── */
+  async function loadSparklines(sets) {
+    await Promise.allSettled(sets.map(async set => {
+      const etb = byType(set.products, 'Elite Trainer Box');
+      if (!etb) return;
+      const pid = etb.product_id;
+      try {
+        if (!historyCache[pid]) {
+          historyCache[pid] = await apiFetch(`/api/history/${pid}`);
+        }
+        const el = document.getElementById(`spark-${set.group_id}`);
+        if (el) el.innerHTML = sparkline(historyCache[pid]);
+      } catch { /* leave placeholder dashed line */ }
+    }));
   }
 
   /* ── Set card click ── */
