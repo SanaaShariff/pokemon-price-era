@@ -1,6 +1,6 @@
 # Pokemon Price Aggregator
 
-Seeds a local SQLite database with sealed product prices for Pokemon TCG sets, sourced from [tcgcsv.com](https://tcgcsv.com).
+Tracks sealed product prices for Pokemon TCG sets in a local SQLite database, sourced from [tcgcsv.com](https://tcgcsv.com).
 
 ## Database
 
@@ -18,7 +18,11 @@ Three tables in `pokemon_prices.db`:
 | Scarlet & Violet | SVI, PAL, OBF, MEW, PAR, PAF, TEF, TWM, SFA, SCR, SSP, PRE, JTG, DRI, BLK, WHT |
 | Mega Evolution | MEG, PFL, ASC, POR |
 
-## Usage
+## Scripts
+
+### `seed.py`
+
+One-time setup. Creates the database tables and populates sets, products, and an initial price snapshot.
 
 ```bash
 python -m venv .venv
@@ -27,4 +31,12 @@ pip install requests
 python seed.py
 ```
 
-The script prints progress as it runs. Expect ~2 minutes for a full seed across all 37 sets.
+Expect ~2 minutes for a full seed across all 37 sets.
+
+### `snapshot.py`
+
+Run daily to capture current prices. Fetches prices for each set and inserts one row per product into `price_snapshots`, skipping any products already snapshotted today.
+
+```bash
+python snapshot.py
+```
