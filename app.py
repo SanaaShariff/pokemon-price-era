@@ -34,7 +34,7 @@ def get_era(era: str):
     conn = get_conn()
     try:
         sets = conn.execute(
-            "SELECT group_id, name, abbreviation, published_on "
+            "SELECT group_id, name, abbreviation, published_on, image_url "
             "FROM sets WHERE era = ? ORDER BY published_on",
             (era,),
         ).fetchall()
@@ -99,11 +99,12 @@ def get_era(era: str):
 
         return [
             {
-                "group_id":    s["group_id"],
-                "name":        s["name"],
+                "group_id":     s["group_id"],
+                "name":         s["name"],
                 "abbreviation": s["abbreviation"],
                 "published_on": (s["published_on"] or "")[:10],
-                "products":    products_by_group.get(s["group_id"], []),
+                "image_url":    s["image_url"],
+                "products":     products_by_group.get(s["group_id"], []),
             }
             for s in sets
         ]
