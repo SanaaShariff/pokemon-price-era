@@ -19,7 +19,7 @@ SETS_BY_ERA = {
     "Mega Evolution": ["MEG", "PFL", "ASC", "POR"],
 }
 
-SEALED_KEYWORDS = ["Booster Box", "Elite Trainer Box", "Booster Pack"]
+SEALED_KEYWORDS = ["Booster Box", "Pokemon Center Elite Trainer Box", "Elite Trainer Box", "Booster Pack"]
 EXCLUDE_KEYWORDS = ["Case", "Bundle", "Sleeved", "Code Card", "Half Booster", "Set of"]
 
 TOTAL_SETS = sum(len(v) for v in SETS_BY_ERA.values())

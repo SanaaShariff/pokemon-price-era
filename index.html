@@ -319,7 +319,16 @@
     .pc-change.down { color: var(--red);   }
     .pc-change.flat { color: var(--text-3); }
 
-    .chart-container { height: 300px; }
+    .chart-container { height: 300px; display: flex; flex-direction: column; }
+    .variant-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
+    .variant-btn {
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer;
+      border: 1px solid var(--border); background: transparent; color: var(--text-2);
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .variant-btn:hover { border-color: var(--border-hi); color: var(--text); }
+    .variant-btn.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--text); }
+    #plotly-target { flex: 1; min-height: 0; }
 
     /* ── Footer ── */
     footer {
@@ -493,13 +502,15 @@
   const eraCache = {};
   const historyCache = {};
   let selectedSet = null;
-  let selectedType = 'Elite Trainer Box';
+  let selectedType       = 'Elite Trainer Box';
+  let selectedVariantPid = null;
   let renderToken = 0;
 
   const TYPES = [
-    { db: 'Elite Trainer Box', label: 'Elite Trainer Box', short: 'ETB'  },
-    { db: 'Booster Box',       label: 'Booster Box',       short: 'Box'  },
-    { db: 'Booster Pack',      label: 'Single Pack',        short: 'Pack' },
+    { db: 'Elite Trainer Box',               label: 'Elite Trainer Box', short: 'ETB'  },
+    { db: 'Pokemon Center Elite Trainer Box', label: 'Pokemon Center ETB', short: 'PC'  },
+    { db: 'Booster Box',                     label: 'Booster Box',       short: 'Box'  },
+    { db: 'Booster Pack',                    label: 'Single Pack',       short: 'Pack' },
   ];
 
   /* ── Boot ── */
@@ -669,6 +680,7 @@
 
     selectedSet = set;
     selectedType = 'Elite Trainer Box';
+    selectedVariantPid = null;
     rerenderCards();
     openDetail(set);
   }
@@ -695,9 +707,12 @@
     ++renderToken;
   }
 
-  function buildDetailHTML(set) {
-    const cards = TYPES.map(t => {
-      const product = byType(set.products, t.db);
+  function buildPriceCardsHTML(set) {
+    return TYPES.map(t => {
+      const variants = byTypeAll(set.products, t.db);
+      const product  = (t.db === selectedType && selectedVariantPid)
+        ? (variants.find(p => p.product_id === selectedVariantPid) ?? variants[0])
+        : variants[0] ?? null;
       const price   = product?.latest?.market_price;
       const chg     = pctChange(product?.history ?? []);
       const cls     = chg === null ? 'flat' : chg > 0 ? 'up' : chg < 0 ? 'down' : 'flat';
@@ -711,6 +726,10 @@
           <div class="pc-change ${cls}">${chgStr}</div>
         </div>`;
     }).join('');
+  }
+
+  function buildDetailHTML(set) {
+    const cards = buildPriceCardsHTML(set);
 
     return `
       <div class="detail-header">
@@ -729,9 +748,18 @@
     loadSparklines(sets);
   }
 
+  async function switchVariant(pid) {
+    if (!selectedSet) return;
+    selectedVariantPid = pid;
+    const row = document.querySelector('.price-cards-row');
+    if (row) row.innerHTML = buildPriceCardsHTML(selectedSet);
+    await renderChart(selectedSet, selectedType);
+  }
+
   async function switchType(dbType) {
     if (!selectedSet) return;
     selectedType = dbType;
+    selectedVariantPid = null;
 
     document.querySelectorAll('.price-card').forEach(c => {
       const onclick = c.getAttribute('onclick') ?? '';
@@ -747,22 +775,31 @@
     const chartEl = document.getElementById('price-chart');
     if (!chartEl) return;
 
-    const product = byType(set.products, dbType);
-    if (!product) {
+    const variants = byTypeAll(set.products, dbType);
+    if (!variants.length) {
       chartEl.innerHTML =
         '<div class="state-msg" style="padding:60px 0">No data for this product type.</div>';
       return;
     }
 
+    const product = variants.find(v => v.product_id === selectedVariantPid) ?? variants[0];
     const pid = product.product_id;
+
+    const pickerHTML = variants.length > 1
+      ? `<div class="variant-picker">${variants.map(v =>
+          `<button class="variant-btn ${v.product_id === product.product_id ? 'selected' : ''}"
+                   onclick="switchVariant(${v.product_id})">${variantLabel(v.name, dbType)}</button>`
+        ).join('')}</div>`
+      : '';
+
     if (!historyCache[pid]) {
-      chartEl.innerHTML =
+      chartEl.innerHTML = pickerHTML +
         '<div class="state-msg" style="padding:60px 0">Loading chart...</div>';
       try {
         historyCache[pid] = await apiFetch(`/api/history/${pid}`);
       } catch {
         if (token !== renderToken) return;
-        chartEl.innerHTML =
+        chartEl.innerHTML = pickerHTML +
           '<div class="state-msg" style="padding:60px 0">Failed to load chart data.</div>';
         return;
       }
@@ -774,9 +811,10 @@
     const dates   = history.map(h => h.captured_at);
     const prices  = history.map(h => h.market_price);
 
-    chartEl.innerHTML = '';
+    chartEl.innerHTML = pickerHTML + '<div id="plotly-target" style="flex:1;min-height:0"></div>';
+    const plotEl = document.getElementById('plotly-target');
 
-    Plotly.newPlot(chartEl, [{
+    Plotly.newPlot(plotEl, [{
       x: dates,
       y: prices,
       type: 'scatter',
@@ -840,8 +878,24 @@
   }
 
   /* ── Helpers ── */
+  function byTypeAll(products, dbType) {
+    return products?.filter(p => p.product_type === dbType) ?? [];
+  }
+
   function byType(products, dbType) {
-    return products?.find(p => p.product_type === dbType) ?? null;
+    return byTypeAll(products, dbType)[0] ?? null;
+  }
+
+  function variantLabel(name, dbType) {
+    const m = name.match(/\[([^\]]+)\]/);
+    if (m) return m[1];
+    const idx = name.lastIndexOf(dbType);
+    if (idx >= 0) {
+      const after  = name.slice(idx + dbType.length).trim();
+      const before = name.slice(0, idx).trim();
+      return after || before || name;
+    }
+    return name;
   }
 
   function pctChange(history) {
