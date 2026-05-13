@@ -20,6 +20,7 @@ SETS_BY_ERA = {
 }
 
 SEALED_KEYWORDS = ["Booster Box", "Elite Trainer Box", "Booster Pack"]
+EXCLUDE_KEYWORDS = ["Case", "Bundle", "Sleeved", "Code Card", "Half Booster", "Set of"]
 
 TOTAL_SETS = sum(len(v) for v in SETS_BY_ERA.values())
 
@@ -172,6 +173,7 @@ def main():
         sealed = [
             p for p in all_products
             if any(kw in (p.get("name") or "") for kw in SEALED_KEYWORDS)
+            and not any(ex in (p.get("name") or "") for ex in EXCLUDE_KEYWORDS)
         ]
         print(f"  {len(sealed)} sealed products (of {len(all_products)} total).")
 
